@@ -1,6 +1,10 @@
 package pl.sdacademy.booking.validator;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EmptySource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import pl.sdacademy.booking.model.NewEventDto;
 
 import java.time.Clock;
@@ -168,6 +172,25 @@ class NewEventDtoValidatorTest {
         clock = Clock.fixed(Instant.parse("2022-09-29T16:00:00Z"), ZoneId.systemDefault());
         NewEventDto input = NewEventDto.builder()
                 .itemName("")
+                .fromTime(LocalDateTime.of(2023, 9, 22, 8, 25))
+                .toTime(LocalDateTime.of(2023, 9, 22, 8, 45))
+                .build();
+
+        List<String> result = NewEventDtoValidator.validate(input, clock);
+
+        assertThat(result).hasSize(1)
+                .contains("Item name must be set");
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"    ", "\t", "\n"})
+    @NullSource
+    @EmptySource
+    void shouldCheckThatItemNameIsValidString(String name) {
+        clock = Clock.fixed(Instant.parse("2022-09-29T16:00:00Z"), ZoneId.systemDefault());
+        NewEventDto input = NewEventDto.builder()
+                .itemName(name)
                 .fromTime(LocalDateTime.of(2023, 9, 22, 8, 25))
                 .toTime(LocalDateTime.of(2023, 9, 22, 8, 45))
                 .build();

@@ -1,5 +1,6 @@
 package pl.sdacademy.booking.validator;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EmptySource;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@DisplayName("Validator should")
 class NewEventDtoValidatorTest {
 
     // domyslne ustawienie na poziomie testu uprasza inicjowanie tych ktore dzialaja bez kontroli czasu
@@ -183,7 +185,8 @@ class NewEventDtoValidatorTest {
 
     }
 
-    @ParameterizedTest
+    @DisplayName("check if item name contain only valid strings for cases")
+    @ParameterizedTest(name="when 'name' is -{0}-")
     @ValueSource(strings = {"    ", "\t", "\n"})
     @NullSource
     @EmptySource

@@ -1,5 +1,6 @@
 package pl.sdacademy.booking.service;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,22 +35,7 @@ class EventServiceTest {
         // tak teraz musimy okreslic
         // co maja zwracac mockowane repozytoria
         when(eventRepository.findAll()).thenReturn(
-                List.of(
-                        EventEntity.builder()
-                                .id(1L)
-                                .itemId(2L)
-                                // wraca problem kontroli czasu - problem z przygotowaniem danych testowych sygnalizuje, ze nadal
-                                // mamy nienajlepsza logike
-                                .from(LocalDateTime.of(2123, 9, 23, 8, 10))
-                                .to(LocalDateTime.of(2123, 9, 23, 8, 20))
-                                .build(),
-                        EventEntity.builder()
-                                .id(1L)
-                                .itemId(2L)
-                                .from(LocalDateTime.of(2123, 9, 23, 8, 30))
-                                .to(LocalDateTime.of(2123, 9, 23, 8, 40))
-                                .build()
-                )
+                provideListOf2EventsRelatedTo1Item()
         );
         // jezeli nie dodamy logiki pobrania wszystkich item nasza logika nie bedzie dzialac
         // to kolejny sygnal, ze cos jest nie tak z nasza logika. Musimy odpowiedziec na pytanie:
@@ -58,12 +44,7 @@ class EventServiceTest {
         // jezeli nie - musimy poprawic test
         // moje zalozenie - nie jest to mozliwe, zatem poprawiam test dopisujac jak mock ma udawac co jest w bazie
         when(itemRepository.findAll()).thenReturn(
-                List.of(ItemEntity.builder()
-                        // musi byc to samo co w mockowania zachowania eventRepository.findAll()  -patrz wyzej
-                        .id(2L)
-                        .name("jeden")
-                        .price(BigDecimal.valueOf(120.))
-                        .build())
+                provideItemUsedByEvents()
         );
 
 
@@ -81,6 +62,46 @@ class EventServiceTest {
 
         EventDto second = result.get(1);
         assertThat(second.getItemName()).isEqualTo("jeden");
+    }
+
+    @Disabled
+    @Test
+    void shouldReturnEmptyListIfThereAreEventsWithoutRelatedItems() {
+        when(eventRepository.findAll()).thenReturn(
+                provideListOf2EventsRelatedTo1Item()
+        );
+
+        List<EventDto> result = sut.findEvents();
+
+        assertThat(result).isEmpty();
+    }
+
+    private static List<ItemEntity> provideItemUsedByEvents() {
+        return List.of(ItemEntity.builder()
+                // musi byc to samo co w mockowania zachowania eventRepository.findAll()  -patrz wyzej
+                .id(2L)
+                .name("jeden")
+                .price(BigDecimal.valueOf(120.))
+                .build());
+    }
+
+    private static List<EventEntity> provideListOf2EventsRelatedTo1Item() {
+        return List.of(
+                EventEntity.builder()
+                        .id(1L)
+                        .itemId(2L)
+                        // wraca problem kontroli czasu - problem z przygotowaniem danych testowych sygnalizuje, ze nadal
+                        // mamy nienajlepsza logike
+                        .from(LocalDateTime.of(2123, 9, 23, 8, 10))
+                        .to(LocalDateTime.of(2123, 9, 23, 8, 20))
+                        .build(),
+                EventEntity.builder()
+                        .id(1L)
+                        .itemId(2L)
+                        .from(LocalDateTime.of(2123, 9, 23, 8, 30))
+                        .to(LocalDateTime.of(2123, 9, 23, 8, 40))
+                        .build()
+        );
     }
 
 

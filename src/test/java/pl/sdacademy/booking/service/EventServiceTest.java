@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import pl.sdacademy.booking.data.EventEntity;
 import pl.sdacademy.booking.data.ItemEntity;
 import pl.sdacademy.booking.model.EventDto;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +31,7 @@ class EventServiceTest {
     @InjectMocks
     private EventService sut;
 
+    // sciezka pozytywna
     @Test
     void shouldResultAllEventsInDbAsListOfDto() {
         // tak jak recznie ustawiane byly dane (poprzednio) w TestEventRepository,
@@ -64,6 +67,29 @@ class EventServiceTest {
         assertThat(second.getItemName()).isEqualTo("jeden");
     }
 
+    // sciezka alternatywna
+    @Test
+    void shouldReturnEmptyListIfNothingInDb() {
+        when(eventRepository.findAll()).thenReturn(List.of());
+        when(itemRepository.findAll()).thenReturn(List.of());
+
+        List<EventDto> result = sut.findEvents();
+
+        assertThat(result).isEmpty();
+    }
+
+    //sciezka alternatywna 2
+    @Test
+    void shouldReturnEmptyListIfNoScheduledEvents() {
+        when(eventRepository.findAll()).thenReturn(List.of());
+        when(itemRepository.findAll()).thenReturn(provideItemUsedByEvents());
+
+        List<EventDto> result = sut.findEvents();
+
+        assertThat(result).isEmpty();
+    }
+
+    // sciezka alternatywna - blad nasz, do korekty (czesciowo negatywna)
     @Disabled
     @Test
     void shouldReturnEmptyListIfThereAreEventsWithoutRelatedItems() {
@@ -74,6 +100,15 @@ class EventServiceTest {
         List<EventDto> result = sut.findEvents();
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldThrowExceptionWhenProblemWithDatabase() {
+        when(eventRepository.findAll()).thenThrow(new InvalidDataAccessResourceUsageException("invalid network"));
+
+        assertThatExceptionOfType(InvalidDataAccessResourceUsageException.class)
+                .isThrownBy(() -> sut.findEvents())
+                .withMessage("invalid network");
     }
 
     private static List<ItemEntity> provideItemUsedByEvents() {

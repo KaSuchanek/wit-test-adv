@@ -10,6 +10,7 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import pl.sdacademy.booking.data.EventEntity;
 import pl.sdacademy.booking.data.ItemEntity;
 import pl.sdacademy.booking.model.EventDto;
+import pl.sdacademy.booking.model.NewEventDto;
 import pl.sdacademy.booking.repository.EventRepository;
 import pl.sdacademy.booking.repository.ItemRepository;
 
@@ -19,6 +20,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,6 +112,26 @@ class EventServiceTest {
         assertThatExceptionOfType(InvalidDataAccessResourceUsageException.class)
                 .isThrownBy(() -> sut.findEvents())
                 .withMessage("invalid network");
+    }
+
+    @Test
+    void shouldAddNewEventWhenAllAttributesAndRelatedItemsCorrect() {
+        NewEventDto inputParam = NewEventDto.builder()
+                .itemName("test item")
+                .fromTime(LocalDateTime.of(2123, 9, 22, 8, 20))
+                .toTime(LocalDateTime.of(2123, 9, 22, 8, 40))
+                .build();
+        when(eventRepository.findEventsByFrom(inputParam.getFromTime()))
+                .thenReturn(null);
+
+        var result = sut.addEvent(inputParam);
+
+        assertThat(result).isEqualTo("Sesja została zapisana");
+        // to jest testowanie implementacji - czy jest potrzebne?
+        // jak zachowa się test jeżeli w klasie testowanej usunięmy wywołanie tej metody
+        // a tutaj usuniemy to sprawdzenie?
+        // a jak gdy zostawimy?
+        verify(eventRepository).save(any(EventEntity.class));
     }
 
     private static List<ItemEntity> provideItemUsedByEvents() {
